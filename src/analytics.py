@@ -60,17 +60,31 @@ def get_longest_streak_overall(habits: List[Habit]) -> int:
     streaks = map(lambda habit: habit.get_longest_streak(), habits)
     return max(streaks)
 
+from datetime import datetime, timedelta # Add this to the top of analytics.py if not there
+
 def get_struggled_habits(habits: List[Habit]) -> List[Habit]:
     """
-    Returns a list of habits the user struggled with.
-    Definition of "struggled": The habit is currently broken 
-    (i.e., missed the completion deadline in the current or previous period).
+    Returns a list of habits the user struggled with in the last 30 days.
+    Definition of "struggled": The habit was completed less than 90% of the expected periods.
     Uses filter().
     
     Args:
         habits (List[Habit]): The list of habits to analyze.
         
     Returns:
-        List[Habit]: A list of habits that are currently broken.
+        List[Habit]: A list of habits that were struggled with.
     """
-    return list(filter(lambda habit: habit.is_broken(), habits))
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+    
+    def is_struggled(habit: Habit) -> bool:
+        # Get completions within the last 30 days
+        recent_completions = list(filter(lambda c: c >= thirty_days_ago, habit.completions))
+        count = len(recent_completions)
+        
+        if habit.periodicity == "daily":
+            return count < 28  # Missed 2 or more days
+        elif habit.periodicity == "weekly":
+            return count < 4   # Missed 1 or more weeks
+        return False
+        
+    return list(filter(is_struggled, habits))
