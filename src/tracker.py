@@ -17,7 +17,7 @@ class HabitTracker:
         self.storage = StorageManager(db_path)
         self.habits: List[Habit] = self.storage.load_habits()
 
-    def add_habit(self, name: str, specification: str, periodicity: str) -> Habit:
+    def add_habit(self, name: str, specification: str, periodicity: str, created_at: Optional[datetime] = None) -> Habit:
         """
         Creates a new habit, saves it to the database, and adds it to the in-memory list.
         
@@ -25,6 +25,7 @@ class HabitTracker:
             name (str): Short name of the habit.
             specification (str): Detailed description.
             periodicity (str): "daily" or "weekly".
+            created_at (datetime, optional): The creation date. Defaults to now.
             
         Returns:
             Habit: The newly created Habit object.
@@ -33,13 +34,16 @@ class HabitTracker:
         if periodicity not in ["daily", "weekly"]:
             raise ValueError("Periodicity must be 'daily' or 'weekly'.")
             
+        if created_at is None:
+            created_at = datetime.now()
+            
         # Create a temporary Habit object without an ID first
         new_habit = Habit(
             id=0,  # Temporary ID, will be replaced by DB
             name=name,
             specification=specification,
             periodicity=periodicity,
-            created_at=datetime.now()
+            created_at=created_at
         )
         
         # Save to DB and get the actual generated ID
